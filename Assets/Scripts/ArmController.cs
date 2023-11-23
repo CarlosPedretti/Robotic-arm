@@ -6,11 +6,11 @@ using UnityEngine;
 using DG.Tweening;
 public class ArmController : MonoBehaviour
 {
-    [SerializeField] private Rigidbody baseRotorRb;
-    [SerializeField] private Rigidbody arm1Rb;
-    [SerializeField] private Rigidbody arm2Rb;
-    [SerializeField] private Rigidbody arm3Rb;
-    [SerializeField] private Rigidbody handRotorRb;
+    [SerializeField] private Transform baseRotor;
+    [SerializeField] private Transform arm1;
+    [SerializeField] private Transform arm2;
+    [SerializeField] private Transform arm3;
+    [SerializeField] private Transform handRotor;
 
     [SerializeField] private float period = 5;
     [SerializeField] private TMP_InputField inputInstructions;
@@ -53,31 +53,32 @@ public class ArmController : MonoBehaviour
     }
     private IEnumerator RealizarMovimiento(string eje, float grados)
     {
-        float rotationTime = (period / 360) * grados;
+        float rotationTime = (period / 360) * Mathf.Abs(grados);
+
         switch (eje)
         {
             case "M1":
                 Debug.Log("Rotate Base");
-                baseRotorRb.DORotate(new Vector3(0, grados, 0), rotationTime, RotateMode.LocalAxisAdd);
+                baseRotor.DORotate(new Vector3(0, grados, 0), rotationTime, RotateMode.LocalAxisAdd);
                 break;
 
             case "M2":
-                arm1Rb.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
+                arm1.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
                 break;
 
             case "M3":
-                arm2Rb.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
+                arm2.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
                 break;
 
             case "M4":
-                arm3Rb.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
+                arm3.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
                 break;
 
             case "M5":
-                handRotorRb.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
+                handRotor.DORotate(new Vector3(0, 0, grados), rotationTime, RotateMode.LocalAxisAdd);
                 break;
         }
 
-       yield return new WaitForSeconds(rotationTime);
+        yield return new WaitForSeconds(rotationTime);
     }
 }
