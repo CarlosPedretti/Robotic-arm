@@ -78,6 +78,6 @@ public class ArmController : MonoBehaviour
                 break;
         }
 
-       yield return null;
+       yield return new WaitForSeconds(rotationTime);
     }
 }
