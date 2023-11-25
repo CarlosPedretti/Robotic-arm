@@ -81,4 +81,9 @@ public class ArmController : MonoBehaviour
 
         yield return new WaitForSeconds(rotationTime);
     }
+
+    public void StopCorrutines()
+    {
+        StopAllCoroutines();
+    }
 }
