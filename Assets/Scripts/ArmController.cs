@@ -84,6 +84,7 @@ public class ArmController : MonoBehaviour
 
     public void StopCorrutines()
     {
+        Debug.Log("StopCorrutines!");
         StopAllCoroutines();
     }
 }

@@ -8,6 +8,7 @@ public class HandController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("OnTriggerEnter!");
 
         if (other.gameObject.tag == "Ground")
         {
