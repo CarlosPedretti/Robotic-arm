@@ -17,6 +17,10 @@ public class ArmController : MonoBehaviour
     [SerializeField] private string instructionsString;
 
 
+    private void Update()
+    {
+        
+    }
 
     public void RunCommand()
     {
