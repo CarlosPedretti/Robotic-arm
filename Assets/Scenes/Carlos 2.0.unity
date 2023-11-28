@@ -608,6 +608,18 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
+        m_CallState: 0
+      - m_Target: {fileID: 3133160838313470708}
+        m_TargetAssemblyTypeName: TestingJoints, Assembly-CSharp
+        m_MethodName: RunCommand
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &700147818
 MonoBehaviour:
@@ -2707,7 +2719,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3133160838313470706}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 028368e873f5118489635c70cb6a3d28, type: 3}
   m_Name: 
@@ -2727,18 +2739,25 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3133160838313470706}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 97665eb7673989447a188940c9cd5a3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  configurableJoint: {fileID: 833380825}
-  baseRotor: {fileID: 833380826}
-  arm1: {fileID: 8309986325127100878}
-  arm2: {fileID: 7973012572685893560}
-  arm3: {fileID: 8359265761879340891}
-  handRotor: {fileID: 873464025}
-  rotationVelocity: 10
+  rotationVelocity: 100000
+  baseRotorJoint: {fileID: 833380825}
+  arm1Joint: {fileID: 8309986325127100877}
+  arm2Joint: {fileID: 7973012572685893559}
+  arm3Joint: {fileID: 8359265761879340892}
+  handRotorJoint: {fileID: 873464026}
+  baseRotorRb: {fileID: 833380826}
+  arm1Rb: {fileID: 8309986325127100878}
+  arm2Rb: {fileID: 7973012572685893560}
+  arm3Rb: {fileID: 8359265761879340891}
+  handRotorRb: {fileID: 873464025}
+  period: 20
+  inputInstructions: {fileID: 716492253}
+  instructionsString: 
 --- !u!4 &3152854788780215418
 Transform:
   m_ObjectHideFlags: 0
@@ -4412,7 +4431,7 @@ Rigidbody:
     serializedVersion: 2
     m_Bits: 0
   m_ImplicitCom: 1
-  m_ImplicitTensor: 0
+  m_ImplicitTensor: 1
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
