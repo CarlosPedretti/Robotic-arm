@@ -43,8 +43,7 @@ public class TestingJoints : MonoBehaviour
 
         float rotationDifference = degrees - currentRotation;
 
-        // Aplicar torque gradualmente usando una interpolación lineal
-        float torqueMultiplier = Mathf.Clamp01(Mathf.Abs(rotationDifference) / 180f); // Ajusta el divisor según tus necesidades
+        float torqueMultiplier = Mathf.Clamp01(Mathf.Abs(rotationDifference) / 180f); 
         rb.AddTorque(0, torque * torqueMultiplier * Mathf.Sign(rotationDifference), 0, ForceMode.Force);
 
         SoftJointLimit limit = configurableJoint.angularYLimit;
