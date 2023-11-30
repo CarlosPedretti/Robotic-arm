@@ -6,6 +6,7 @@ using UnityEngine;
 using DG.Tweening;
 using QFSW.QC;
 using QFSW.QC.Actions;
+using QFSW.QC.Suggestors.Tags;
 
 public class ArmController : MonoBehaviour
 {
@@ -73,28 +74,35 @@ public class ArmController : MonoBehaviour
         StartCoroutine(InterpreteInstructions(instruction));
     }
 
+    //Todavia no programado!
+    [Command("restart", MonoTargetType.All)]
+    public void ResetRotation([Suggestions("ALL", "M1", "M2", "M3", "M4", "M5")] string rotor)
+    {
+
+    }
+
 
     public IEnumerator InterpreteInstructions(string instruction)
     {
         string instructionUpperCase = instruction.ToUpper();
 
-        string[] movimientos = instructionUpperCase.Split(',');
+        string[] movements = instructionUpperCase.Split(',');
 
-        foreach (string movimiento in movimientos)
+        foreach (string movement in movements)
         {
-            string[] partes = movimiento.Split('_');
+            string[] parts = movement.Split('_');
 
-            if (partes.Length == 2)
+            if (parts.Length == 2)
             {
-                string eje = partes[0];
-                float grados = float.Parse(partes[1]);
+                string axis = parts[0];
+                float degrees = float.Parse(parts[1]);
 
-                yield return StartCoroutine(ProduceMovement(eje, grados));
+                yield return StartCoroutine(ProduceMovement(axis, degrees));
 
             }
             else
             {
-                Debug.LogError("Formato de instrucción incorrecto: " + movimiento);
+                Debug.LogError("Formato de instrucción incorrecto: " + movement);
             }
         }
     }
@@ -151,18 +159,10 @@ public class ArmController : MonoBehaviour
                     transform.DORotate(new Vector3(0, 0, degrees), rotationTime, RotateMode.LocalAxisAdd);
                     break;
             }
-            /*Debug.LogWarning("partActualRotation: " + partActualRotation);
-            Debug.LogWarning("newPartActualRotation: " + newPartActualRotation);
-            Debug.LogWarning("newPosibleRange: " + newPosibleRange);
-            Debug.LogWarning("IsOnRange: " + IsOnRange(newPosibleRange, range));*/
         }
         else
         {
             Debug.LogWarning($"El valor de rotación para {rotor} está fuera del rango permitido ({range.min} a {range.max}). No se realizará la rotación.");
-            /*Debug.LogWarning("partActualRotation: " + partActualRotation);
-            Debug.LogWarning("newPartActualRotation: " + newPartActualRotation);
-            Debug.LogWarning("newPosibleRange: " + newPosibleRange);
-            Debug.LogWarning("IsOnRange: " + IsOnRange(newPosibleRange, range));*/
         }
     }
 
