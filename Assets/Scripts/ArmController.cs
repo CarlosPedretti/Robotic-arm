@@ -55,56 +55,31 @@ public class ArmController : MonoBehaviour
         }
     }
 
-
-    public void RunCommand()
-    {
-        if (inputInstructions.text != null)
-        {
-            instructionsString = inputInstructions.text;
-            //hay que comprobar el formato correcto del comando
-            //los comandos deben tener el formato"M1_45,M2_-30"
-            StartCoroutine(InterpreteInstructions(instructionsString));
-        }
-    }
-
-
     [Command("move", MonoTargetType.All)]
-    public void MoveCommand(string instruction)
+    public void MoveCommand(string rotor, string degrees)
     {
-        StartCoroutine(InterpreteInstructions(instruction));
+        StartCoroutine(InterpreteInstructions(rotor, degrees));
     }
 
     //Todavia no programado!
-    [Command("restart", MonoTargetType.All)]
+    [Command("init", MonoTargetType.All)]
     public void ResetRotation([Suggestions("ALL", "M1", "M2", "M3", "M4", "M5")] string rotor)
     {
 
     }
 
-
-    public IEnumerator InterpreteInstructions(string instruction)
+    [Command("period", MonoTargetType.All)]
+    public void PeriodCommand(float period)
     {
-        string instructionUpperCase = instruction.ToUpper();
+        ChangePeriod(period);
+    }
 
-        string[] movements = instructionUpperCase.Split(',');
 
-        foreach (string movement in movements)
-        {
-            string[] parts = movement.Split('_');
+    public IEnumerator InterpreteInstructions(string rotor, string degrees)
+    {
 
-            if (parts.Length == 2)
-            {
-                string axis = parts[0];
-                float degrees = float.Parse(parts[1]);
+        yield return StartCoroutine(ProduceMovement(rotor.ToUpper(), float.Parse(degrees)));
 
-                yield return StartCoroutine(ProduceMovement(axis, degrees));
-
-            }
-            else
-            {
-                Debug.LogError("Formato de instrucción incorrecto: " + movement);
-            }
-        }
     }
 
 
@@ -112,22 +87,23 @@ public class ArmController : MonoBehaviour
     {
         float rotationTime = (period / 360) * Mathf.Abs(degrees);
 
+
         switch (rotor)
         {
             case "M1":
-                EstablishPosibleRotation(degrees, baseRotor.localEulerAngles.y, rangeBaseRotor, baseRotor, rotationTime,"y", rotor);
+                EstablishPosibleRotation(degrees, baseRotor.localEulerAngles.y, rangeBaseRotor, baseRotor, rotationTime,"z", rotor);
                 break;
 
             case "M2":
-                EstablishPosibleRotation(degrees, arm1.localEulerAngles.z, rangeArm1, arm1, rotationTime, "z", rotor);
+                EstablishPosibleRotation(degrees, arm1.localEulerAngles.z, rangeArm1, arm1, rotationTime, "y", rotor);
                 break;
 
             case "M3":
-                EstablishPosibleRotation(degrees, arm2.localEulerAngles.z, rangeArm2, arm2, rotationTime, "z", rotor);
+                EstablishPosibleRotation(degrees, arm2.localEulerAngles.z, rangeArm2, arm2, rotationTime, "y", rotor);
                 break;
 
             case "M4":
-                EstablishPosibleRotation(degrees, arm3.localEulerAngles.z, rangeArm3, arm3, rotationTime, "z", rotor);
+                EstablishPosibleRotation(degrees, arm3.localEulerAngles.z, rangeArm3, arm3, rotationTime, "y", rotor);
                 break;
 
             case "M5":
@@ -180,10 +156,8 @@ public class ArmController : MonoBehaviour
         return angle;
     }
 
-    //Fuera de uso por el momento.
-    public void StopCorrutines()
+    private void ChangePeriod(float value)
     {
-        Debug.Log("StopCorrutines!");
-        StopAllCoroutines();
+        period = value;
     }
 }

@@ -37,10 +37,10 @@ public class ArmUI : MonoBehaviour
 
     public void UpdateText()
     {
-        DisplayRotationAndRange(baseRotor, armController.GetRangeBaseRotor(), baseRotorText, "Rotation M1", "y");
-        DisplayRotationAndRange(arm1, armController.GetRangeArm1(), arm1Text, "Rotation M2", "z");
-        DisplayRotationAndRange(arm2, armController.GetRangeArm2(), arm2Text, "Rotation M3", "z");
-        DisplayRotationAndRange(arm3, armController.GetRangeArm3(), arm3Text, "Rotation M4", "z");
+        DisplayRotationAndRange(baseRotor, armController.GetRangeBaseRotor(), baseRotorText, "Rotation M1", "z");
+        DisplayRotationAndRange(arm1, armController.GetRangeArm1(), arm1Text, "Rotation M2", "y");
+        DisplayRotationAndRange(arm2, armController.GetRangeArm2(), arm2Text, "Rotation M3", "y");
+        DisplayRotationAndRange(arm3, armController.GetRangeArm3(), arm3Text, "Rotation M4", "y");
         DisplayRotationAndRange(handRotor, armController.GetRangeHandRotor(), handRotorText, "Rotation M5", "x");
     }
 
