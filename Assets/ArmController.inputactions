@@ -15,9 +15,45 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ChangeRotor",
+                    "name": "ChangeBaseRotor",
                     "type": "Button",
                     "id": "8a5382a6-b587-48d6-9777-9c8ee3f49018",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ChangeArm1Rotor",
+                    "type": "Button",
+                    "id": "4d1f9a81-8969-4f9b-a64d-95e393d4bb7f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ChangeArm2Rotor",
+                    "type": "Button",
+                    "id": "dbc81ca7-6b77-43cf-be7a-ae69e9ca142f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ChangeArm3Rotor",
+                    "type": "Button",
+                    "id": "da0667fe-68a7-40e5-b1ae-2bfddec022a0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ChangeHandRotor",
+                    "type": "Button",
+                    "id": "a2906e57-47e4-4631-8879-dc81422443ef",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -53,39 +89,6 @@
             ],
             "bindings": [
                 {
-                    "name": "A and D",
-                    "id": "ce61385c-05c4-47e1-92fc-70efc1ba07cc",
-                    "path": "1DAxis",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotation",
-                    "isComposite": true,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "negative",
-                    "id": "a0b287ba-bde4-42a4-bdee-14362e4972d1",
-                    "path": "<Keyboard>/a",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "positive",
-                    "id": "c1aca736-36c1-4afe-b55f-2a5ef487c8a6",
-                    "path": "<Keyboard>/d",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotation",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
                     "name": "",
                     "id": "5a748c6f-3685-48b3-8a6e-0a12e2d0d029",
                     "path": "<Keyboard>/g",
@@ -108,46 +111,101 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "Q and E",
-                    "id": "eeac8a35-29e2-4a77-8c6a-d85a67b81bbd",
+                    "name": "",
+                    "id": "4b5ed294-8e8c-42d6-81ec-85d4c12a9651",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ExecuteMotion",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6fc5ab6d-3c3f-455c-b41a-8d10ee31f7b4",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangeBaseRotor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "A and D",
+                    "id": "0537945c-b42d-4bea-b599-a7b17113e0f1",
                     "path": "1DAxis",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ChangeRotor",
+                    "action": "Rotation",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "negative",
-                    "id": "5b4efbc1-df0c-415a-9a94-e8e63c222afd",
-                    "path": "<Keyboard>/q",
+                    "id": "fd842516-9df2-49af-8b59-e37fae52632d",
+                    "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ChangeRotor",
+                    "action": "Rotation",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
                 {
                     "name": "positive",
-                    "id": "eae70cee-8c14-4c69-96c4-a1a287c54b1f",
-                    "path": "<Keyboard>/e",
+                    "id": "fff1b5e9-1aae-4096-bd05-614c1ea25436",
+                    "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ChangeRotor",
+                    "action": "Rotation",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
                 {
                     "name": "",
-                    "id": "4b5ed294-8e8c-42d6-81ec-85d4c12a9651",
-                    "path": "<Keyboard>/f",
+                    "id": "e20995fa-3ac4-4a13-96f0-5e81479a9be5",
+                    "path": "<Keyboard>/2",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ExecuteMotion",
+                    "action": "ChangeArm1Rotor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "178597c6-4cee-4a7d-a78d-6c6a06504f12",
+                    "path": "<Keyboard>/5",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangeHandRotor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "337e4773-8f3f-4344-8e43-ed0589e09222",
+                    "path": "<Keyboard>/3",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangeArm2Rotor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "49b696cd-aa67-4e79-a400-7c7c85a496d4",
+                    "path": "<Keyboard>/4",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangeArm3Rotor",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

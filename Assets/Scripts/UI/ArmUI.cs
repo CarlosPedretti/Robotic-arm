@@ -2,54 +2,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
+using Unity.VisualScripting;
+using static NewArmController;
 
 public class ArmUI : MonoBehaviour
 {
-    [SerializeField] private ArmController armController;
     [SerializeField] private NewArmController newArmController;
 
-    [SerializeField] private Transform baseRotor;
-    [SerializeField] private Transform arm1;
-    [SerializeField] private Transform arm2;
-    [SerializeField] private Transform arm3;
-    [SerializeField] private Transform handRotor;
+    [SerializeField] private RotorUI baseRotorUI;
+    [SerializeField] private RotorUI arm1UI;
+    [SerializeField] private RotorUI arm2UI;
+    [SerializeField] private RotorUI arm3UI;
+    [SerializeField] private RotorUI handRotorUI;
 
-    [SerializeField] private TextMeshProUGUI baseRotorText;
-    [SerializeField] private TextMeshProUGUI arm1Text;
-    [SerializeField] private TextMeshProUGUI arm2Text;
-    [SerializeField] private TextMeshProUGUI arm3Text;
-    [SerializeField] private TextMeshProUGUI handRotorText;
 
-    [SerializeField] private TextMeshProUGUI probando;
+    [SerializeField] private TextMeshProUGUI selectedPartActualRotationText;
+
+
+
+    [System.Serializable]
+    public struct RotorUI
+    {
+        public Transform rotor;
+        public TextMeshProUGUI rotationAndRangeText;
+        public TextMeshProUGUI rotorNameText;
+        public TMP_InputField rotorNameInputField;
+        public TMP_InputField rangeMinInputField;
+        public TMP_InputField rangeMaxInputField;
+    }
+
+    private void Start()
+    {
+        UpdateRotationsUI(newArmController, EventArgs.Empty);
+        newArmController.OnRotationChanged += UpdateRotationsUI;
+    }
 
     void Update()
     {
-        UpdateText();
-
-    }
-
-    private float ConvertToSignedAngle(float angle)
-    {
-        if (angle > 180f)
-        {
-            return angle - 360f;
-        }
-        return angle;
+        selectedPartActualRotationText.text = $"Rotation to add: {newArmController.inputCurrentPartDegrees:F0}°";
+        UpdateRotationsUI(newArmController, EventArgs.Empty);
     }
 
 
-    public void UpdateText()
-    {
-        probando.text = newArmController.inputCurrentPartRotation.ToString();
-
-        DisplayRotationAndRange(newArmController.baseRotor, baseRotorText, "Rotation M1");
-        DisplayRotationAndRange(newArmController.arm1, arm1Text, "Rotation M2");
-        DisplayRotationAndRange(newArmController.arm2, arm2Text, "Rotation M3");
-        DisplayRotationAndRange(newArmController.arm3, arm3Text, "Rotation M4");
-        DisplayRotationAndRange(newArmController.handRotor, handRotorText, "Rotation M5");
-    }
-
-    private void DisplayRotationAndRange(NewArmController.Rotor rotor, TextMeshProUGUI textComponent, string label)
+    private void DisplayRotationAndRange(NewArmController.Rotor rotor, RotorUI rotorUi, string label)
     {
         float currentRotation = 0f;
 
@@ -67,10 +63,10 @@ public class ArmUI : MonoBehaviour
                 break;
         }
 
-        textComponent.text = $"{label}: {currentRotation:F0}°   Range: {rotor.range.min}° to {rotor.range.max}°";
+        rotorUi.rotationAndRangeText.text = $"{label}: {currentRotation:F0}°   Range: {rotor.range.min}° to {rotor.range.max}°";
     }
 
-    private void DisplayOnlyRotation(NewArmController.Rotor rotor, TextMeshProUGUI textComponent, string label)
+    private void DisplayOnlyRotation(NewArmController.Rotor rotor, RotorUI rotorUi, string label)
     {
         float currentRotation = 0f;
 
@@ -88,7 +84,69 @@ public class ArmUI : MonoBehaviour
                 break;
         }
 
-        textComponent.text = $"{label}: {currentRotation:F0}°";
+        rotorUi.rotationAndRangeText.text = $"{label}: {currentRotation:F0}°";
     }
 
+    public void ReadStringToRotorName(NewArmController.Rotor rotor, RotorUI rotorUI)
+    {
+        rotor.rotorName = rotorUI.rotorNameInputField.text.ToUpper();
+    }
+
+    public void ReadStringToRotorRange(NewArmController.Rotor rotor, RotorUI rotorUI)
+    {
+        float minRange, maxRange;
+        int maxCharLimit = 3; 
+
+        if (!string.IsNullOrEmpty(rotorUI.rangeMinInputField.text) && rotorUI.rangeMinInputField.text.Length <= maxCharLimit)
+        {
+            if (float.TryParse(rotorUI.rangeMinInputField.text, out minRange))
+            {
+                rotor.range.min = minRange;
+            }
+            else
+            {
+                //Debug.LogError("Error al convertir el valor mínimo del rango a número");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(rotorUI.rangeMaxInputField.text) && rotorUI.rangeMaxInputField.text.Length <= maxCharLimit)
+        {
+            if (float.TryParse(rotorUI.rangeMaxInputField.text, out maxRange))
+            {
+                rotor.range.max = maxRange;
+            }
+            else
+            {
+                //Debug.LogError("Error al convertir el valor máximo del rango a número");
+            }
+        }
+
+    }
+
+    public void OnRangeChangedUI()
+    {
+        ReadStringToRotorRange(newArmController.baseRotor, baseRotorUI);
+        ReadStringToRotorRange(newArmController.arm1, arm1UI);
+        ReadStringToRotorRange(newArmController.arm2, arm2UI);
+        ReadStringToRotorRange(newArmController.arm3, arm3UI);
+        ReadStringToRotorRange(newArmController.handRotor, handRotorUI);
+    }
+
+    public void OnNameChangedUI()
+    {
+        ReadStringToRotorName(newArmController.baseRotor, baseRotorUI);
+        ReadStringToRotorName(newArmController.arm1, arm1UI);
+        ReadStringToRotorName(newArmController.arm2, arm2UI);
+        ReadStringToRotorName(newArmController.arm3, arm3UI);
+        ReadStringToRotorName(newArmController.handRotor, handRotorUI);
+    }
+
+    public void UpdateRotationsUI(object sender, EventArgs e)
+    {
+        DisplayRotationAndRange(newArmController.baseRotor, baseRotorUI, "Rotation " + newArmController.baseRotor.rotorName.ToString());
+        DisplayRotationAndRange(newArmController.arm1, arm1UI, "Rotation " + newArmController.arm1.rotorName.ToString());
+        DisplayRotationAndRange(newArmController.arm2, arm2UI, "Rotation " + newArmController.arm2.rotorName.ToString());
+        DisplayRotationAndRange(newArmController.arm3, arm3UI, "Rotation " + newArmController.arm3.rotorName.ToString());
+        DisplayRotationAndRange(newArmController.handRotor, handRotorUI, "Rotation " + newArmController.handRotor.rotorName.ToString());
+    }
 }

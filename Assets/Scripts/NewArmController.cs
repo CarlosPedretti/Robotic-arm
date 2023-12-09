@@ -1,4 +1,5 @@
 using Mono.Reflection;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -8,26 +9,40 @@ using QFSW.QC;
 using QFSW.QC.Actions;
 using QFSW.QC.Suggestors.Tags;
 using UnityEngine.InputSystem;
+using Unity.Burst.Intrinsics;
+using System.Linq;
 
 public class NewArmController : MonoBehaviour
 {
+    #region Variables
+    public event EventHandler OnRotationChanged;
+
     [Header("General Configuration")]
     [SerializeField] private bool useInput;
     [SerializeField] private float period = 5;
     [Space]
 
     [Header("InputSystem")]
-    [SerializeField] private List<GameObject> rotorsList = new List<GameObject>();
-    [SerializeField] private int currentRotorIndex;
+    [SerializeField] private Dictionary<Rotor, GameObject> rotorDictionary = new Dictionary<Rotor, GameObject>();
+    [SerializeField] private Rotor currentRotorSelected;
     [SerializeField] private float rotationSpeed;
-    public float inputCurrentPartRotation = 0;
+    public float inputCurrentPartDegrees = 0;
 
-    private int previousRotorIndex;
+    bool selectedRotor = false;
+
     private float rotationInput;
-    private float changeRotorInput;
+
+    private InputAndCheck baseRotorInput;
+    private InputAndCheck arm1Input;
+    private InputAndCheck arm2Input;
+    private InputAndCheck arm3Input;
+    private InputAndCheck handRotorInput;
+
+
     private float executeMotionInput;
     private PlayerInput playerInput;
     private bool isPressing;
+    private bool isPressing2;
     [Space]
 
     [Header("Rotors Config")]
@@ -37,9 +52,13 @@ public class NewArmController : MonoBehaviour
     [SerializeField] public Rotor arm3;
     [SerializeField] public Rotor handRotor;
 
+    #endregion
+
+    #region Structs and Classes
     [System.Serializable]
-    public struct Rotor
+    public class Rotor
     {
+        public GameObject rotorObject;
         public Transform rotor;
         public string rotorName;
         public string axis;
@@ -48,7 +67,6 @@ public class NewArmController : MonoBehaviour
         public float currentRotation;
 
     }
-
 
     [System.Serializable]
     public struct Range
@@ -63,37 +81,36 @@ public class NewArmController : MonoBehaviour
         }
     }
 
-
-    private void FixedUpdate()
+    [System.Serializable]
+    public struct InputAndCheck
     {
-        RotationWithInput(baseRotor);
-        ChangeRotor(rotorsList);
-
-        baseRotor.currentRotation = UpdateCurrentRotation(baseRotor);
-        arm1.currentRotation = UpdateCurrentRotation(arm1);
-        arm2.currentRotation = UpdateCurrentRotation(arm2);
-        arm3.currentRotation = UpdateCurrentRotation(arm3);
-        handRotor.currentRotation = UpdateCurrentRotation(handRotor);
-
-
-
+       public float input;
+       public bool check;
     }
+    #endregion
 
+    #region Awake, Start and Update
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
     }
     private void Start()
     {
-        baseRotor.initialRotation = StoreInitialRotation(baseRotor);
-        arm1.initialRotation = StoreInitialRotation(arm1);
-        arm2.initialRotation = StoreInitialRotation(arm2);
-        arm3.initialRotation = StoreInitialRotation(arm3);
-        handRotor.initialRotation = StoreInitialRotation(handRotor);
+        StoreAllInitialRotations();
+
+        AddAllObjectsToDictionary();
 
     }
 
+    private void FixedUpdate()
+    {
+        UpdateAllCurrentRotations();
 
+        SelectRotor();
+    }
+    #endregion
+
+    #region Commands
     [Command("move", MonoTargetType.All)]
     public void MoveCommand(string rotor, string degrees)
     {
@@ -111,42 +128,41 @@ public class NewArmController : MonoBehaviour
     {
         ChangePeriod(period);
     }
+    #endregion
 
 
+    #region Logic for command Simulation
     public IEnumerator InterpreteInstructions(string rotor, string degrees)
     {
 
         yield return StartCoroutine(ProduceMovement(rotor.ToUpper(), float.Parse(degrees)));
 
+        Logger.Log($"{rotor} {degrees}");
     }
-
 
     public IEnumerator ProduceMovement(string rotor, float degrees)
     {
         float rotationTime = CalculateRotateTime(degrees);
 
-
-        switch (rotor)
+        if (rotor == baseRotor.rotorName)
         {
-            case "M1":
-                EstablishPosibleRotation(degrees, rotationTime, baseRotor);
-                break;
-
-            case "M2":
-                EstablishPosibleRotation(degrees, rotationTime, arm1);
-                break;
-
-            case "M3":
-                EstablishPosibleRotation(degrees, rotationTime, arm2);
-                break;
-
-            case "M4":
-                EstablishPosibleRotation(degrees, rotationTime, arm3);
-                break;
-
-            case "M5":
-                EstablishPosibleRotation(degrees, rotationTime, handRotor);
-                break;
+            EstablishPosibleRotation(degrees, rotationTime, baseRotor);
+        }
+        else if (rotor == arm1.rotorName)
+        {
+            EstablishPosibleRotation(degrees, rotationTime, arm1);
+        }
+        else if (rotor == arm2.rotorName)
+        {
+            EstablishPosibleRotation(degrees, rotationTime, arm2);
+        }
+        else if (rotor == arm3.rotorName)
+        {
+            EstablishPosibleRotation(degrees, rotationTime, arm3);
+        }
+        else if (rotor == handRotor.rotorName)
+        {
+            EstablishPosibleRotation(degrees, rotationTime, handRotor);
         }
 
         yield return new WaitForSeconds(rotationTime);
@@ -162,36 +178,33 @@ public class NewArmController : MonoBehaviour
 
         float totalRotationTime = rotationTimeM1 + rotationTimeM2 + rotationTimeM3 + rotationTimeM4 + rotationTimeM5;
 
-        switch (rotor)
+        if (rotor == baseRotor.rotorName)
         {
-            case "M1":
-                EstablishPosibleRotation(DegreesToInit(baseRotor), rotationTimeM1, baseRotor);
-                break;
-
-            case "M2":
-                EstablishPosibleRotation(DegreesToInit(arm1), rotationTimeM2, arm1);
-                break;
-
-            case "M3":
-                EstablishPosibleRotation(DegreesToInit(arm2), rotationTimeM3, arm2);
-                break;
-
-            case "M4":
-                EstablishPosibleRotation(DegreesToInit(arm3), rotationTimeM4, arm3);
-                break;
-
-            case "M5":
-                EstablishPosibleRotation(DegreesToInit(handRotor), rotationTimeM5, handRotor);
-                break;
-
-            case "ALL":
-
-                EstablishPosibleRotation(DegreesToInit(baseRotor), rotationTimeM1, baseRotor);
-                EstablishPosibleRotation(DegreesToInit(arm1), rotationTimeM2, arm1);
-                EstablishPosibleRotation(DegreesToInit(arm2), rotationTimeM3, arm2);
-                EstablishPosibleRotation(DegreesToInit(arm3), rotationTimeM4, arm3);
-                EstablishPosibleRotation(DegreesToInit(handRotor), rotationTimeM5, handRotor);
-                break;
+            EstablishPosibleRotation(DegreesToInit(baseRotor), rotationTimeM1, baseRotor);
+        }
+        else if (rotor == arm1.rotorName)
+        {
+            EstablishPosibleRotation(DegreesToInit(arm1), rotationTimeM2, arm1);
+        }
+        else if (rotor == arm2.rotorName)
+        {
+            EstablishPosibleRotation(DegreesToInit(arm2), rotationTimeM3, arm2);
+        }
+        else if (rotor == arm3.rotorName)
+        {
+            EstablishPosibleRotation(DegreesToInit(arm3), rotationTimeM4, arm3);
+        }
+        else if (rotor == handRotor.rotorName)
+        {
+            EstablishPosibleRotation(DegreesToInit(handRotor), rotationTimeM5, handRotor);
+        }
+        else if (rotor == "ALL")
+        {
+            EstablishPosibleRotation(DegreesToInit(baseRotor), rotationTimeM1, baseRotor);
+            EstablishPosibleRotation(DegreesToInit(arm1), rotationTimeM2, arm1);
+            EstablishPosibleRotation(DegreesToInit(arm2), rotationTimeM3, arm2);
+            EstablishPosibleRotation(DegreesToInit(arm3), rotationTimeM4, arm3);
+            EstablishPosibleRotation(DegreesToInit(handRotor), rotationTimeM5, handRotor);
         }
 
         yield return new WaitForSeconds(totalRotationTime);
@@ -210,14 +223,14 @@ public class NewArmController : MonoBehaviour
             switch (rotor.axis.ToLower())
             {
                 case "x":
-                    rotor.rotor.DORotate(new Vector3(degrees, 0, 0), rotationTime, RotateMode.LocalAxisAdd);
+                    rotor.rotor.DORotate(new Vector3(degrees, 0, 0), rotationTime, RotateMode.LocalAxisAdd).OnComplete(() => OnRotationChanged?.Invoke(this, EventArgs.Empty));
                     break;
                 case "y":
-                    rotor.rotor.DORotate(new Vector3(0, degrees, 0), rotationTime, RotateMode.LocalAxisAdd);
+                    rotor.rotor.DORotate(new Vector3(0, degrees, 0), rotationTime, RotateMode.LocalAxisAdd).OnComplete(() => OnRotationChanged?.Invoke(this, EventArgs.Empty));
                     break;
                 case "z":
                 default:
-                    rotor.rotor.DORotate(new Vector3(0, 0, degrees), rotationTime, RotateMode.LocalAxisAdd);
+                    rotor.rotor.DORotate(new Vector3(0, 0, degrees), rotationTime, RotateMode.LocalAxisAdd).OnComplete(() => OnRotationChanged?.Invoke(this, EventArgs.Empty));
                     break;
             }
         }
@@ -225,6 +238,8 @@ public class NewArmController : MonoBehaviour
         {
             Debug.LogWarning($"El valor de rotación para {rotor.rotorName} está fuera del rango permitido ({rotor.range.min} a {rotor.range.max}). No se realizará la rotación.");
         }
+
+        //OnRotationChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private bool IsOnRange(float value, Rotor rotor)
@@ -240,7 +255,7 @@ public class NewArmController : MonoBehaviour
         }
         return angle;
     }
-    
+
     private float CalculateRotateTime(float degrees)
     {
         float rotationTime = (period / 360) * Mathf.Abs(degrees);
@@ -314,104 +329,137 @@ public class NewArmController : MonoBehaviour
         period = value;
     }
 
+    private void StoreAllInitialRotations()
+    {
+        baseRotor.initialRotation = StoreInitialRotation(baseRotor);
+        arm1.initialRotation = StoreInitialRotation(arm1);
+        arm2.initialRotation = StoreInitialRotation(arm2);
+        arm3.initialRotation = StoreInitialRotation(arm3);
+        handRotor.initialRotation = StoreInitialRotation(handRotor);
+    }
+
+    private void UpdateAllCurrentRotations()
+    {
+        baseRotor.currentRotation = UpdateCurrentRotation(baseRotor);
+        arm1.currentRotation = UpdateCurrentRotation(arm1);
+        arm2.currentRotation = UpdateCurrentRotation(arm2);
+        arm3.currentRotation = UpdateCurrentRotation(arm3);
+        handRotor.currentRotation = UpdateCurrentRotation(handRotor);
+    }
+
+    private void AddAllObjectsToDictionary()
+    {
+        rotorDictionary.Add(baseRotor, baseRotor.rotorObject);
+        rotorDictionary.Add(arm1, arm1.rotorObject);
+        rotorDictionary.Add(arm2, arm2.rotorObject);
+        rotorDictionary.Add(arm3, arm3.rotorObject);
+        rotorDictionary.Add(handRotor, handRotor.rotorObject);
+    }
+    #endregion
 
 
 
-    //Movimiento con Input
-    private void ChangeRotor(List<GameObject> rotorList)
+    #region Logic with New Input System
+    private void SelectRotor()
     {
         if (useInput == true)
+        {  
+            CheckInputSelectRotor(baseRotorInput, 0, "ChangeBaseRotor");
+            CheckInputSelectRotor(arm1Input, 1, "ChangeArm1Rotor");
+            CheckInputSelectRotor(arm2Input, 2, "ChangeArm2Rotor");
+            CheckInputSelectRotor(arm3Input, 3, "ChangeArm3Rotor");
+            CheckInputSelectRotor(handRotorInput, 4, "ChangeHandRotor");
+        }
+
+    }
+
+    private void CheckInputSelectRotor(InputAndCheck inputAndCheck, int rotorIndex, string actions)
+    {
+        inputAndCheck.input = playerInput.actions[$"{actions}"].ReadValue<float>();
+        if (inputAndCheck.input != 0)
         {
-            changeRotorInput = playerInput.actions["ChangeRotor"].ReadValue<float>();
-
-            if (changeRotorInput == 1 && !isPressing || changeRotorInput == -1 && !isPressing)
+            if (rotorDictionary.ContainsKey(currentRotorSelected))
             {
-                isPressing = true;
-
-                int direction = Mathf.RoundToInt(changeRotorInput);
-
-                previousRotorIndex = currentRotorIndex;
-
-                currentRotorIndex = (currentRotorIndex + direction + rotorList.Count) % rotorList.Count;
-
-                GameObject previousRotor = rotorList[previousRotorIndex];
-
-                Outline previousOutlineComponent = previousRotor.GetComponent<Outline>();
-
-                if (previousOutlineComponent != null)
-                {
-                    previousOutlineComponent.enabled = false;
-                }
-
-                GameObject selectedRotor = rotorList[currentRotorIndex];
-
-                Outline outlineComponent = selectedRotor.GetComponent<Outline>();
-
-                if (outlineComponent != null)
-                {
-                    outlineComponent.enabled = true;
-
-                    // outlineComponent.OutlineColor = Color.red;
-                    // outlineComponent.OutlineWidth = 2f;
-                }
-
-
+                rotorDictionary[currentRotorSelected].GetComponent<Outline>().enabled = false;
             }
+            inputAndCheck.check = true;
+            selectedRotor = true;
+            currentRotorSelected = GetRotorByIndex(rotorIndex);
+            rotorDictionary[currentRotorSelected].GetComponent<Outline>().enabled = true;
 
-            if (changeRotorInput == 0)
-            {
-                isPressing = false;
-            }
         }
         else
         {
-            GameObject selectedRotor = rotorList[currentRotorIndex];
+            inputAndCheck.check = false;
 
-            Outline outlineComponent = selectedRotor.GetComponent<Outline>();
-
-            if (outlineComponent != null)
-            {
-                outlineComponent.enabled = false;
-            }
         }
-    }
-    private void RotationWithInput(Rotor rotor)
-    {
-        if (useInput == true)
+
+        if (selectedRotor)
         {
-            rotationInput = playerInput.actions["Rotation"].ReadValue<float>();
-            if (rotationInput != 0)
-            {
-                float adjustedRotationSpeed = rotationSpeed * 0.0001f;
-
-                float rawRotation = rotationInput * adjustedRotationSpeed * Time.fixedDeltaTime;
-                Debug.Log("rawRotation: " + rawRotation);
-                if (rawRotation > 0)
-                {
-                    inputCurrentPartRotation += Mathf.Ceil(rawRotation);
-                    inputCurrentPartRotation = Mathf.Clamp(inputCurrentPartRotation, rotor.range.min, rotor.range.max);
-                    Debug.Log("currentRotation: " + inputCurrentPartRotation);
-                }
-                else
-                {
-                    inputCurrentPartRotation += Mathf.Floor(rawRotation);
-                    inputCurrentPartRotation = Mathf.Clamp(inputCurrentPartRotation, rotor.range.min, rotor.range.max);
-                    Debug.Log("currentRotation: " + inputCurrentPartRotation);
-                }
-
-            }
-
-            executeMotionInput = playerInput.actions["ExecuteMotion"].ReadValue<float>();
-            if(executeMotionInput != 0 )
-            {
-                if (executeMotionInput == 1)
-                {
-                    float rotationTime = CalculateRotateTime(inputCurrentPartRotation);
-                    EstablishPosibleRotation(inputCurrentPartRotation, rotationTime, rotor);
-                }
-            }
+            RotationWithInput(currentRotorSelected);
 
         }
     }
 
+    private Rotor GetRotorByIndex(int index)
+    {
+        if (rotorDictionary.Count == 0)
+        {
+            return default(Rotor);
+        }
+
+        index = (index + rotorDictionary.Count) % rotorDictionary.Count;
+        return rotorDictionary.Keys.ElementAt(index);
+    }
+
+ private void RotationWithInput(Rotor rotor)
+ {
+     if (useInput == true)
+     {
+         rotationInput = playerInput.actions["Rotation"].ReadValue<float>();
+         if (rotationInput != 0)
+         {
+             float adjustedRotationSpeed = rotationSpeed * 0.00001f;
+
+             float rawRotation = rotationInput * adjustedRotationSpeed * Time.fixedDeltaTime;
+             if (rawRotation > 0)
+             {
+                 inputCurrentPartDegrees += Mathf.Ceil(rawRotation);
+                 inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
+                
+             }
+             else
+             {
+                 inputCurrentPartDegrees += Mathf.Floor(rawRotation);
+                 inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
+             }
+
+         }
+
+         executeMotionInput = playerInput.actions["ExecuteMotion"].ReadValue<float>();
+         if(executeMotionInput != 0 )
+         {
+             if (executeMotionInput == 1 && !isPressing2)
+             {
+                 isPressing2 = true;
+
+                 float rotationTime = CalculateRotateTime(inputCurrentPartDegrees);
+                 EstablishPosibleRotation(inputCurrentPartDegrees, rotationTime, rotor);
+                 Logger.Log($"{rotor.rotorName} {inputCurrentPartDegrees}");
+                 rotorDictionary[currentRotorSelected].GetComponent<Outline>().enabled = false;
+                 selectedRotor = false;
+                 currentRotorSelected = default(Rotor);
+                 inputCurrentPartDegrees = 0;
+             }
+
+         }
+
+         if (executeMotionInput == 0)
+         {
+             isPressing2 = false;
+         }
+
+     }
+ }
+    #endregion
 }
