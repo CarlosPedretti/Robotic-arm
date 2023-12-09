@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 using System;
 using Unity.VisualScripting;
 using static NewArmController;
@@ -18,6 +19,7 @@ public class ArmUI : MonoBehaviour
 
 
     [SerializeField] private TextMeshProUGUI selectedPartActualRotationText;
+    [SerializeField] private Toggle canUseInput;
 
 
 
@@ -34,6 +36,7 @@ public class ArmUI : MonoBehaviour
 
     private void Start()
     {
+        canUseInput.onValueChanged.AddListener(OnToggleChanged);
         UpdateRotationsUI(newArmController, EventArgs.Empty);
         newArmController.OnRotationChanged += UpdateRotationsUI;
     }
@@ -139,6 +142,20 @@ public class ArmUI : MonoBehaviour
         ReadStringToRotorName(newArmController.arm2, arm2UI);
         ReadStringToRotorName(newArmController.arm3, arm3UI);
         ReadStringToRotorName(newArmController.handRotor, handRotorUI);
+    }
+
+    public void OnToggleChanged(bool value)
+    {
+        newArmController.useInput = value;
+
+        if (newArmController.useInput == true)
+        {
+            selectedPartActualRotationText.gameObject.SetActive(true);
+        }
+        else
+        {
+            selectedPartActualRotationText.gameObject.SetActive(false);
+        }
     }
 
     public void UpdateRotationsUI(object sender, EventArgs e)

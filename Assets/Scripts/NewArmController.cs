@@ -18,7 +18,7 @@ public class NewArmController : MonoBehaviour
     public event EventHandler OnRotationChanged;
 
     [Header("General Configuration")]
-    [SerializeField] private bool useInput;
+    [SerializeField] public bool useInput;
     [SerializeField] private float period = 5;
     [Space]
 
