@@ -11,6 +11,7 @@ using QFSW.QC.Suggestors.Tags;
 using UnityEngine.InputSystem;
 using Unity.Burst.Intrinsics;
 using System.Linq;
+using static NewArmController;
 
 public class NewArmController : MonoBehaviour
 {
@@ -43,6 +44,18 @@ public class NewArmController : MonoBehaviour
     private PlayerInput playerInput;
     private bool isPressing;
     private bool isPressing2;
+    [SerializeField] private bool handIsOpening;
+    [SerializeField] private bool handIsClosing;
+    [SerializeField] private bool hand_Touch_R;
+    [SerializeField] private bool hand_Touch_L;
+    private GameObject grabbedObject;
+    private bool haveObject;
+
+    public bool HandIsClosing { set { handIsClosing = value; } }
+    public bool Hand_Touch_R { set { hand_Touch_R = value; } }
+    public bool Hand_Touch_L { set { hand_Touch_L = value; } }
+    public GameObject GrabbedObject { set { grabbedObject = value; } }
+
     [Space]
 
     [Header("Rotors Config")]
@@ -51,6 +64,14 @@ public class NewArmController : MonoBehaviour
     [SerializeField] public Rotor arm2;
     [SerializeField] public Rotor arm3;
     [SerializeField] public Rotor handRotor;
+    [SerializeField] public Rotor handActuator;
+    [Space]
+
+    [Header("Hand Config")]
+    [SerializeField] private Rigidbody hand_Pivot;
+    [SerializeField] private Transform hand_R;
+    [SerializeField] private Transform hand_L;
+
 
     #endregion
 
@@ -84,8 +105,8 @@ public class NewArmController : MonoBehaviour
     [System.Serializable]
     public struct InputAndCheck
     {
-       public float input;
-       public bool check;
+        public float input;
+        public bool check;
     }
     #endregion
 
@@ -107,8 +128,55 @@ public class NewArmController : MonoBehaviour
         UpdateAllCurrentRotations();
 
         SelectRotor();
+        if (hand_Touch_R && hand_Touch_L)
+        {
+            HandIsClosing = false;
+            if (!haveObject)
+            {
+                GrabObject();
+            }
+        }
+        if (handIsOpening)
+        {
+            if (haveObject) DropObject();
+
+            handIsClosing = false;
+            hand_Touch_R = false;
+            hand_Touch_L = false;
+            hand_L.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+            hand_R.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+
+            if (hand_L.localEulerAngles.z <= 90)
+            {
+                handIsOpening = false;
+            }
+        }
+        if (handIsClosing)
+        {
+            handIsOpening = false;
+            hand_L.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+            hand_R.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+        }
     }
     #endregion
+
+    #region Holding onto object
+    public void GrabObject()
+    {
+        haveObject = true;
+
+        var object_FJ = grabbedObject.AddComponent<FixedJoint>();
+        object_FJ.connectedBody = hand_Pivot;
+    }
+    public void DropObject()
+    {
+        grabbedObject.GetComponent<FixedJoint>().breakForce = 0;
+        haveObject = false;
+    }
+    #endregion
+
+
+
 
     #region Commands
     [Command("move", MonoTargetType.All)]
@@ -164,7 +232,11 @@ public class NewArmController : MonoBehaviour
         {
             EstablishPosibleRotation(degrees, rotationTime, handRotor);
         }
-
+        else if (rotor == handActuator.rotorName)
+        {
+            if (degrees == 0) handIsOpening = true;
+            else if (degrees == 1) handIsClosing = true;
+        }
         yield return new WaitForSeconds(rotationTime);
     }
 
@@ -363,7 +435,7 @@ public class NewArmController : MonoBehaviour
     private void SelectRotor()
     {
         if (useInput == true)
-        {  
+        {
             CheckInputSelectRotor(baseRotorInput, 0, "ChangeBaseRotor");
             CheckInputSelectRotor(arm1Input, 1, "ChangeArm1Rotor");
             CheckInputSelectRotor(arm2Input, 2, "ChangeArm2Rotor");
@@ -412,54 +484,54 @@ public class NewArmController : MonoBehaviour
         return rotorDictionary.Keys.ElementAt(index);
     }
 
- private void RotationWithInput(Rotor rotor)
- {
-     if (useInput == true)
-     {
-         rotationInput = playerInput.actions["Rotation"].ReadValue<float>();
-         if (rotationInput != 0)
-         {
-             float adjustedRotationSpeed = rotationSpeed * 0.00001f;
+    private void RotationWithInput(Rotor rotor)
+    {
+        if (useInput == true)
+        {
+            rotationInput = playerInput.actions["Rotation"].ReadValue<float>();
+            if (rotationInput != 0)
+            {
+                float adjustedRotationSpeed = rotationSpeed * 0.00001f;
 
-             float rawRotation = rotationInput * adjustedRotationSpeed * Time.fixedDeltaTime;
-             if (rawRotation > 0)
-             {
-                 inputCurrentPartDegrees += Mathf.Ceil(rawRotation);
-                 inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
-                
-             }
-             else
-             {
-                 inputCurrentPartDegrees += Mathf.Floor(rawRotation);
-                 inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
-             }
+                float rawRotation = rotationInput * adjustedRotationSpeed * Time.fixedDeltaTime;
+                if (rawRotation > 0)
+                {
+                    inputCurrentPartDegrees += Mathf.Ceil(rawRotation);
+                    inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
 
-         }
+                }
+                else
+                {
+                    inputCurrentPartDegrees += Mathf.Floor(rawRotation);
+                    inputCurrentPartDegrees = Mathf.Clamp(inputCurrentPartDegrees, rotor.range.min, rotor.range.max);
+                }
 
-         executeMotionInput = playerInput.actions["ExecuteMotion"].ReadValue<float>();
-         if(executeMotionInput != 0 )
-         {
-             if (executeMotionInput == 1 && !isPressing2)
-             {
-                 isPressing2 = true;
+            }
 
-                 float rotationTime = CalculateRotateTime(inputCurrentPartDegrees);
-                 EstablishPosibleRotation(inputCurrentPartDegrees, rotationTime, rotor);
-                 Logger.Log($"{rotor.rotorName} {inputCurrentPartDegrees}");
-                 rotorDictionary[currentRotorSelected].GetComponent<Outline>().enabled = false;
-                 selectedRotor = false;
-                 currentRotorSelected = default(Rotor);
-                 inputCurrentPartDegrees = 0;
-             }
+            executeMotionInput = playerInput.actions["ExecuteMotion"].ReadValue<float>();
+            if (executeMotionInput != 0)
+            {
+                if (executeMotionInput == 1 && !isPressing2)
+                {
+                    isPressing2 = true;
 
-         }
+                    float rotationTime = CalculateRotateTime(inputCurrentPartDegrees);
+                    EstablishPosibleRotation(inputCurrentPartDegrees, rotationTime, rotor);
+                    Logger.Log($"{rotor.rotorName} {inputCurrentPartDegrees}");
+                    rotorDictionary[currentRotorSelected].GetComponent<Outline>().enabled = false;
+                    selectedRotor = false;
+                    currentRotorSelected = default(Rotor);
+                    inputCurrentPartDegrees = 0;
+                }
 
-         if (executeMotionInput == 0)
-         {
-             isPressing2 = false;
-         }
+            }
 
-     }
- }
+            if (executeMotionInput == 0)
+            {
+                isPressing2 = false;
+            }
+
+        }
+    }
     #endregion
 }
