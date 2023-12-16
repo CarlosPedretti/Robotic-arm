@@ -46,8 +46,10 @@ public class NewArmController : MonoBehaviour
     private bool isPressing2;
     [SerializeField] private bool handIsOpening;
     [SerializeField] private bool handIsClosing;
-    [SerializeField] private bool hand_Touch_R;
-    [SerializeField] private bool hand_Touch_L;
+    private bool isClosed;
+    private bool isOpen;
+    private bool hand_Touch_R;
+    private bool hand_Touch_L;
     private GameObject grabbedObject;
     private bool haveObject;
 
@@ -130,6 +132,7 @@ public class NewArmController : MonoBehaviour
         SelectRotor();
         if (hand_Touch_R && hand_Touch_L)
         {
+            
             HandIsClosing = false;
             if (!haveObject)
             {
@@ -138,24 +141,34 @@ public class NewArmController : MonoBehaviour
         }
         if (handIsOpening)
         {
-            if (haveObject) DropObject();
-
-            handIsClosing = false;
-            hand_Touch_R = false;
-            hand_Touch_L = false;
-            hand_L.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
-            hand_R.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
-
             if (hand_L.localEulerAngles.z <= 90)
             {
                 handIsOpening = false;
             }
+            else
+            {
+                if (haveObject) DropObject();
+
+                handIsClosing = false;
+                hand_Touch_R = false;
+                hand_Touch_L = false;
+                hand_L.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+                hand_R.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+            }         
         }
-        if (handIsClosing)
+        if (handIsClosing && !isClosed)
         {
-            handIsOpening = false;
-            hand_L.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
-            hand_R.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+            if (hand_L.localEulerAngles.z >= 110.9)
+            {
+                handIsClosing = false;
+            }
+            else
+            {
+                handIsOpening = false;
+                hand_L.DORotate(new Vector3(0, 0, 1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+                hand_R.DORotate(new Vector3(0, 0, -1), Time.fixedDeltaTime, RotateMode.LocalAxisAdd);
+            }
+            
         }
     }
     #endregion

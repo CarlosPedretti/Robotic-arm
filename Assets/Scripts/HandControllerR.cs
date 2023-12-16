@@ -8,19 +8,10 @@ public class HandControllerR : MonoBehaviour
     [SerializeField] private Rigidbody hand_Rb;
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Finger"))
+        if (collision.gameObject.CompareTag("Object"))
         {
-            armController.HandIsClosing = false;
-            Debug.Log("finger");
-
-
-        }
-        else if (collision.gameObject.CompareTag("Object"))
-        {
-            Debug.Log("Touch");
-
             armController.Hand_Touch_R = true;
-            armController.GrabbedObject =collision.gameObject;
+            armController.GrabbedObject = collision.gameObject;
         }
     }
 }
