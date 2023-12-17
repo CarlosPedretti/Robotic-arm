@@ -1,9 +1,14 @@
 using UnityEngine;
 using System.IO;
+using Unity.VisualScripting;
+using System;
+
 public static class Logger
 {
 
-    [SerializeField] private static string logFilePath = $"Commands/Runtime.jmp";
+    static DateTime currentDate = DateTime.Now;
+    static string formattedDate = currentDate.ToString("dd-MM-yy");
+    public static string logFilePath = $"Commands/Runtime_{formattedDate}.jmp";
 
     public static void Log(string message)
     {
