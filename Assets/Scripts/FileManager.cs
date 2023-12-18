@@ -42,13 +42,13 @@ public class FileManager : MonoBehaviour
             }
             else
             {
-                infoText += $"Source File does not Exist\n";
+                infoText += $"Source File does not exist.\n";
             }
             infoTx.text = infoText;
         }
         catch
         {
-            infoText += $"Error to Upload";
+            infoText += $"Error to Upload.";
             infoTx.text = infoText;
         }
     }

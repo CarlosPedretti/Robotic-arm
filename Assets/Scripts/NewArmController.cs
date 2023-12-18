@@ -321,7 +321,7 @@ public class NewArmController : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"El valor de rotación para {rotor.rotorName} está fuera del rango permitido ({rotor.range.min} a {rotor.range.max}). No se realizará la rotación.");
+            Debug.LogWarning($"The rotation value for {rotor.rotorName} is out of the permited range ({rotor.range.min} to {rotor.range.max}). The rotation won't be ejectued");
         }
 
         //OnRotationChanged?.Invoke(this, EventArgs.Empty);
