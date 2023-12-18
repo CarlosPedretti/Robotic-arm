@@ -27,6 +27,8 @@ public class NewArmController : MonoBehaviour
     [SerializeField] private Dictionary<Rotor, GameObject> rotorDictionary = new Dictionary<Rotor, GameObject>();
     [SerializeField] private Rotor currentRotorSelected;
     [SerializeField] private float rotationSpeed;
+
+    private float grabInput;
     public float inputCurrentPartDegrees = 0;
 
     bool selectedRotor = false;
@@ -44,6 +46,8 @@ public class NewArmController : MonoBehaviour
     private PlayerInput playerInput;
     private bool isPressing;
     private bool isPressing2;
+    private bool isPressing3;
+
     [SerializeField] private bool handIsOpening;
     [SerializeField] private bool handIsClosing;
     private bool isClosed;
@@ -130,6 +134,10 @@ public class NewArmController : MonoBehaviour
         UpdateAllCurrentRotations();
 
         SelectRotor();
+
+        GrabInput();
+
+
         if (hand_Touch_R && hand_Touch_L)
         {
             
@@ -544,6 +552,27 @@ public class NewArmController : MonoBehaviour
                 isPressing2 = false;
             }
 
+        }
+
+    }
+    private void GrabInput()
+    {
+        if (useInput == true)
+        {
+            grabInput = playerInput.actions["Grab"].ReadValue<float>();
+            if (grabInput == 1)
+            {
+                Debug.Log("GrabInput: 1");
+                isPressing3 = !isPressing3;
+                if (isPressing3)
+                {
+                    handIsClosing = true;
+                }
+                else
+                {
+                    handIsOpening = true;
+                }
+            }
         }
     }
     #endregion
