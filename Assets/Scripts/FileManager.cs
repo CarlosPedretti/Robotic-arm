@@ -29,7 +29,6 @@ public class FileManager : MonoBehaviour
         {
             if (File.Exists(sourcePath))
             {
-                Debug.Log("Existe");
                 using (StreamReader sr = new StreamReader(sourcePath))
                 {
                     string line;
@@ -39,10 +38,10 @@ public class FileManager : MonoBehaviour
                     }
                 }
                 runBt.gameObject.SetActive(true);
+                infoText += $"File Uploaded: {sourcePath}\n";
             }
             else
             {
-                Debug.Log("No Existe");
                 infoText += $"Source File does not Exist\n";
             }
             infoTx.text = infoText;
@@ -91,10 +90,20 @@ public class FileManager : MonoBehaviour
 
     public void OnClickRun()
     {
+       StartCoroutine(CommandsRuntime());
+    }
+
+    public IEnumerator CommandsRuntime()
+    {
+        Debug.Log("En test");
+        NewArmController armController = GameObject.FindGameObjectWithTag("Arm").GetComponent<NewArmController>();
         foreach (string comand in commandsTxt)
         {
+            string rotor = comand.Split(" ")[0];
+            string degrees = comand.Split(" ")[1];
             infoText += $">>{comand}\n";
             infoTx.text = infoText;
+            yield return StartCoroutine(armController.InterpreteInstructions(rotor, degrees));
         }
     }
 }
